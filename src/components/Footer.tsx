@@ -7,11 +7,13 @@ import { useGSAP } from "@gsap/react";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
-interface FooterProps {
-  onOpenContact: () => void;
-}
+const footerLinks = [
+  { label: "Work", href: "#work", external: false },
+  { label: "contact@devfum.com", href: "mailto:contact@devfum.com", external: true },
+  { label: "LinkedIn", href: "https://pk.linkedin.com/company/devfum", external: true },
+];
 
-export default function Footer({ onOpenContact }: FooterProps) {
+export default function Footer() {
   const footerRef = useRef<HTMLElement>(null);
 
   useGSAP(
@@ -21,16 +23,16 @@ export default function Footer({ onOpenContact }: FooterProps) {
 
       gsap.fromTo(
         ".footer-reveal",
-        { y: 24, opacity: 0 },
+        { y: 20, opacity: 0 },
         {
           y: 0,
           opacity: 1,
-          duration: 0.72,
-          stagger: 0.08,
+          duration: 0.65,
+          stagger: 0.06,
           ease: "power3.out",
           scrollTrigger: {
             trigger: footerRef.current,
-            start: "top 82%",
+            start: "top 92%",
             toggleActions: "play none none none",
           },
         }
@@ -39,66 +41,53 @@ export default function Footer({ onOpenContact }: FooterProps) {
     { scope: footerRef }
   );
 
+  const scrollToTop = () => {
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    window.scrollTo({ top: 0, behavior: reducedMotion ? "auto" : "smooth" });
+  };
+
   return (
     <footer
       ref={footerRef}
-      className="relative overflow-hidden bg-[var(--color-dark)] text-[var(--color-dark-text)]"
+      className="relative overflow-hidden border-t border-[var(--color-line)] bg-[var(--color-bg)] text-[var(--color-ink)]"
     >
-      <div className="relative z-10 mx-auto grid max-w-[1440px] grid-cols-1 gap-12 px-4 py-16 sm:px-6 lg:grid-cols-[1.2fr_0.8fr] lg:px-8 lg:py-24">
-        <div>
-          <p className="footer-reveal mb-5 font-mono text-[11px] uppercase tracking-[0.18em] text-white/42">
-            Devfum portfolio
-          </p>
-          <h2 className="footer-reveal max-w-[780px] text-[clamp(3rem,8vw,8rem)] font-black leading-[0.86] tracking-[-0.06em]">
-            Turn the idea into something real.
-          </h2>
-        </div>
+      <div
+        className="pointer-events-none absolute inset-0 hidden sm:block"
+        aria-hidden="true"
+        style={{
+          background:
+            "linear-gradient(to right, var(--color-line) 1px, transparent 1px) 50% 0 / min(100%, 1440px) 100% no-repeat",
+        }}
+      />
 
-        <div className="footer-reveal flex flex-col justify-between gap-10 border-t border-white/12 pt-8 lg:border-l lg:border-t-0 lg:pl-10 lg:pt-0">
-          <div>
-            <p className="mb-4 max-w-[420px] text-base leading-[1.6] text-white/62">
-              Devfum helps teams move from rough concept to working product proof across AI, automation, XR, and cloud. Built fast enough to test, and clear enough to decide what comes next.
-            </p>
-            <button
-              type="button"
-              onClick={onOpenContact}
-              className="inline-flex min-h-12 items-center rounded-full border border-white/18 px-5 text-sm font-semibold text-white transition-all hover:bg-[var(--color-accent)] hover:text-[var(--color-ink)] hover:border-[var(--color-accent)]"
+      <div className="relative z-10 mx-auto max-w-[1440px] px-4 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))] sm:px-6 sm:pb-0 lg:px-8">
+        <nav
+          className="footer-reveal flex flex-col divide-y divide-[var(--color-line)] border-b border-[var(--color-line)] sm:grid sm:grid-cols-3 sm:divide-x sm:divide-y-0"
+          aria-label="Footer"
+        >
+          {footerLinks.map((link) => (
+            <a
+              key={link.label}
+              href={link.href}
+              className="flex min-h-12 items-center py-4 font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--color-muted)] transition-colors hover:text-[var(--color-ink)] sm:min-h-14 sm:px-3 sm:tracking-[0.16em]"
+              {...(link.external ? { target: "_blank", rel: "noreferrer" } : {})}
             >
-              Start your project
-            </button>
-          </div>
+              {link.label}
+            </a>
+          ))}
+        </nav>
 
-          <div className="grid grid-cols-2 gap-8 font-mono text-[11px] uppercase tracking-[0.16em] text-white/54">
-            <div className="space-y-3">
-              <a className="block transition-colors hover:text-white" href="#work">
-                Work
-              </a>
-              <button
-                type="button"
-                onClick={onOpenContact}
-                className="block text-left uppercase tracking-[0.16em] transition-colors hover:text-white"
-              >
-                Contact
-              </button>
-            </div>
-            <div className="space-y-3">
-              <a className="block transition-colors hover:text-white" href="mailto:contact@devfum.com">
-                contact@devfum.com
-              </a>
-              <a
-                className="block transition-colors hover:text-white"
-                href="https://pk.linkedin.com/company/devfum"
-                target="_blank"
-                rel="noreferrer"
-              >
-                LinkedIn
-              </a>
-            </div>
-          </div>
-        </div>
-
-        <div className="footer-reveal border-t border-white/12 pt-6 font-mono text-[10px] uppercase tracking-[0.16em] text-white/34 lg:col-span-2">
-          (C) {new Date().getFullYear()} Devfum. Selected work, built for client review.
+        <div className="footer-reveal flex items-start justify-between gap-6 py-7 sm:items-center sm:py-6">
+          <p className="min-w-0 max-w-[22rem] font-mono text-[10px] leading-[1.65] uppercase tracking-[0.14em] text-[var(--color-muted)] sm:max-w-none sm:tracking-[0.16em]">
+            (C) {new Date().getFullYear()} Devfum. Selected work, built for client review.
+          </p>
+          <button
+            type="button"
+            onClick={scrollToTop}
+            className="inline-flex min-h-11 shrink-0 items-center font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--color-muted)] transition-colors hover:text-[var(--color-ink)] sm:tracking-[0.16em]"
+          >
+            Back to top ↑
+          </button>
         </div>
       </div>
     </footer>

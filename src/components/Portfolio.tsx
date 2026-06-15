@@ -265,32 +265,9 @@ export default function Portfolio() {
           projects={filteredProjects}
           onOpenCaseStudy={setActiveProject}
         />
-
-        <section className="border-y border-[var(--color-line)] bg-[var(--color-surface)]">
-          <div className="mx-auto grid max-w-[1440px] grid-cols-1 gap-8 px-4 py-14 sm:px-6 lg:grid-cols-[1fr_auto] lg:items-center lg:px-8">
-            <div>
-              <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--color-muted)]">
-                Project review
-              </p>
-              <h2 className="max-w-[760px] text-4xl font-black leading-[0.95] tracking-[-0.045em] sm:text-6xl">
-                Have something similar in mind?
-              </h2>
-              <p className="mt-5 max-w-[640px] text-base leading-[1.65] text-[var(--color-muted-strong)] sm:text-lg">
-                Whether it is an AI workflow, automation system, 3D product experience, internal tool, or full product build, we can help turn the idea into something testable, usable, and ready to grow.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setContactOpen(true)}
-              className="inline-flex min-h-12 shrink-0 items-center justify-center rounded-full bg-[var(--color-ink)] px-6 text-sm font-semibold text-[var(--color-bg)] transition-all hover:scale-[1.02] hover:bg-[var(--color-accent)] hover:text-[var(--color-ink)]"
-            >
-              Let&apos;s talk
-            </button>
-          </div>
-        </section>
       </main>
 
-      <Footer onOpenContact={() => setContactOpen(true)} />
+      <Footer />
       <CaseStudyModal
         project={activeProject}
         projects={projects}
