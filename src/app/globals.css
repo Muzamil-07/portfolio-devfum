@@ -67,6 +67,11 @@ button {
   will-change: transform;
 }
 
+.modal-reveal {
+  opacity: 0;
+}
+
+
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;

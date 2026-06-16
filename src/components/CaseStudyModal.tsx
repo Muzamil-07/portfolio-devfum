@@ -1,13 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import Image from "next/image";
 import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import { Project } from "@/data/projects";
 import ProjectMockup from "@/components/ProjectMockup";
 
-gsap.registerPlugin(useGSAP);
+gsap.registerPlugin(ScrollTrigger, useGSAP);
 
 interface CaseStudyModalProps {
   project: Project | null;
@@ -28,6 +29,56 @@ export default function CaseStudyModal({
   const previouslyFocused = useRef<HTMLElement | null>(null);
   const closeModalRef = useRef<() => void>(() => {});
 
+  useLayoutEffect(() => {
+    if (!project) return;
+
+    previouslyFocused.current = document.activeElement as HTMLElement | null;
+    document.body.style.overflow = "hidden";
+    ScrollTrigger.getAll().forEach((trigger) => trigger.disable(false));
+
+    return () => {
+      document.body.style.overflow = "";
+      ScrollTrigger.getAll().forEach((trigger) => trigger.enable(false));
+    };
+  }, [project]);
+
+  useGSAP(
+    () => {
+      if (!project || !overlayRef.current || !panelRef.current) return;
+
+      const overlay = overlayRef.current;
+      const panel = panelRef.current;
+      const reveals = panel.querySelectorAll(".modal-reveal");
+      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const focusTarget = panel.querySelector<HTMLButtonElement>("[data-modal-close]");
+
+      gsap.killTweensOf([overlay, panel, reveals]);
+      gsap.set(overlay, { opacity: 0 });
+      gsap.set(panel, { opacity: 1, y: reducedMotion ? 0 : 20, scale: reducedMotion ? 1 : 0.98 });
+      gsap.set(reveals, { opacity: 0, y: reducedMotion ? 0 : 10 });
+
+      if (reducedMotion) {
+        gsap.set([overlay, panel, reveals], { opacity: 1, y: 0, scale: 1, clearProps: "transform" });
+        focusTarget?.focus();
+        return;
+      }
+
+      const tl = gsap.timeline({
+        defaults: { ease: "power3.out" },
+        onComplete: () => focusTarget?.focus(),
+      });
+
+      tl.to(overlay, { opacity: 1, duration: 0.22 })
+        .to(panel, { y: 0, scale: 1, duration: 0.3 }, "-=0.12")
+        .to(reveals, { opacity: 1, y: 0, duration: 0.26, stagger: 0.035 }, "-=0.16");
+
+      return () => {
+        tl.kill();
+      };
+    },
+    { scope: overlayRef, dependencies: [project], revertOnUpdate: false }
+  );
+
   useGSAP(
     (_context, contextSafe) => {
       const safe = contextSafe ?? ((fn: () => void) => fn);
@@ -44,55 +95,20 @@ export default function CaseStudyModal({
             onComplete: () => {
               onClose();
               document.body.style.overflow = "";
+              ScrollTrigger.getAll().forEach((trigger) => trigger.enable(false));
               previouslyFocused.current?.focus();
             },
           })
-          .to(panelRef.current, { opacity: 0, y: 24, scale: 0.98, duration: 0.28 })
-          .to(overlayRef.current, { opacity: 0, duration: 0.22 }, "<0.04");
+          .to(panelRef.current, { opacity: 0, y: 16, scale: 0.99, duration: 0.22 })
+          .to(overlayRef.current, { opacity: 0, duration: 0.18 }, "<0.04");
       });
     },
-    { scope: overlayRef, dependencies: [onClose], revertOnUpdate: true }
+    { scope: overlayRef, dependencies: [onClose], revertOnUpdate: false }
   );
 
   const closeModal = useCallback(() => {
     closeModalRef.current();
   }, []);
-
-  useEffect(() => {
-    if (!project || !overlayRef.current || !panelRef.current) return;
-
-    previouslyFocused.current = document.activeElement as HTMLElement | null;
-    document.body.style.overflow = "hidden";
-
-    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const focusTarget = panelRef.current.querySelector<HTMLButtonElement>("[data-modal-close]");
-
-    gsap.set(overlayRef.current, { opacity: 0 });
-    gsap.set(panelRef.current, { opacity: 0, y: reducedMotion ? 0 : 32, scale: reducedMotion ? 1 : 0.96 });
-
-    const tl = gsap.timeline({
-      defaults: { ease: "power3.out" },
-      onComplete: () => focusTarget?.focus(),
-    });
-
-    tl.to(overlayRef.current, { opacity: 1, duration: reducedMotion ? 0.01 : 0.28 })
-      .to(
-        panelRef.current,
-        { opacity: 1, y: 0, scale: 1, duration: reducedMotion ? 0.01 : 0.44 },
-        "-=0.12"
-      )
-      .fromTo(
-        ".modal-reveal",
-        { opacity: 0, y: 18 },
-        { opacity: 1, y: 0, duration: reducedMotion ? 0.01 : 0.44, stagger: 0.06 },
-        "-=0.18"
-      );
-
-    return () => {
-      tl.kill();
-      document.body.style.overflow = "";
-    };
-  }, [project]);
 
   useEffect(() => {
     if (!project) return;
@@ -119,21 +135,26 @@ export default function CaseStudyModal({
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/62 p-2 opacity-0 backdrop-blur-sm sm:p-4"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4"
       onClick={(event) => {
         if (event.target === overlayRef.current) closeModal();
       }}
       role="presentation"
     >
+      <div
+        className="pointer-events-none absolute inset-0 bg-black/62 backdrop-blur-sm"
+        aria-hidden="true"
+      />
+
       <section
         ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="case-study-title"
-        className="max-h-[96vh] w-full max-w-[1360px] overflow-hidden rounded-[22px] border border-[var(--color-line-strong)] bg-[var(--color-bg)] text-[var(--color-ink)] shadow-[0_32px_120px_rgba(0,0,0,0.32)]"
+        className="relative z-10 max-h-[96vh] w-full max-w-[1360px] translate-y-5 scale-[0.98] overflow-hidden rounded-[22px] border border-[var(--color-line-strong)] bg-[var(--color-bg)] text-[var(--color-ink)] shadow-[0_32px_120px_rgba(0,0,0,0.32)]"
       >
         <div ref={scrollContainerRef} className="flex h-[96vh] flex-col overflow-y-auto">
-          <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[var(--color-line)] bg-[var(--color-bg)]/95 px-4 py-3 backdrop-blur-xl sm:px-6">
+          <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[var(--color-line)] bg-[var(--color-bg)]/95 px-4 py-3 backdrop-blur-xl">
             <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--color-muted)]">
               Case study preview
             </p>

@@ -19,7 +19,12 @@ export const metadata: Metadata = {
   description:
     "Selected web apps, SaaS platforms, AI tools, and scalable product systems by Devfum.",
   icons: {
-    icon: "/favicon.ico",
+    icon: [
+      { url: "/logo.webp", type: "image/webp" },
+      { url: "/favicon.ico", type: "image/x-icon" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: "/logo.webp",
   },
   keywords: [
     "Devfum portfolio",
